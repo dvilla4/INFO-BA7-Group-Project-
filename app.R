@@ -65,3 +65,88 @@ server <- function(input, output) {
 
 
 shinyApp(ui = ui, server = server)
+
+-------------------------------------------------------------------------------------------------------------------
+
+library(shiny)
+
+# Define UI for Shiny app
+ui <- fluidPage(
+  
+  # Application title
+  titlePanel("Student Mental Health"),
+  
+  # Sidebar with tabs
+  sidebarLayout(
+    sidebarPanel(
+      tabsetPanel(
+        tabPanel("Gender",
+                 selectInput(inputId = "gender", label = "Choose your gender", 
+                             choices = c("Female", "Male"), selected = "Female")),
+        tabPanel("Anxiety and Year of Study",
+                 selectInput(inputId = "anxiety", label = "Do you have Anxiety?",
+                             choices = c("Yes", "No")),
+                 selectInput(inputId = "year", label = "What is your current year of study?",
+                             choices = c("Year 1", "Year 2", "Year 3", "Year 4", "Year 5+"),
+                             selected = "Year 1")),
+        tabPanel("Treatment",
+                 selectInput(inputId = "treatment", label = "Did you seek any specialist for a treatment?",
+                             choices = c("Yes", "No")))
+      )
+    ),
+    
+    # Show data table in main panel
+    mainPanel(
+      tabsetPanel(
+        tabPanel("Data", tableOutput(outputId = "table")),
+        tabPanel("Summary", verbatimTextOutput(outputId = "summary"))
+      )
+    )
+  )
+)
+
+# Define server logic
+server <- function(input, output) {
+  
+  # Load data from a CSV file
+  data <- read.csv("C:/Users/villa/OneDrive/Documents/Student Mental Health.csv", header = TRUE)
+  
+  # Subset data based on selected inputs
+  subset_data <- reactive({
+    data_subset <- data
+    
+    # Filter data based on gender
+    if (!is.null(input$gender) & input$gender != "All") {
+      data_subset <- subset(data_subset, Choose.your.gender == input$gender)
+    }
+    
+    # Filter data based on anxiety and year of study
+    if (!is.null(input$anxiety) & input$anxiety != "All") {
+      data_subset <- subset(data_subset, Do.you.have.Anxiety. == input$anxiety)
+    }
+    
+    if (!is.null(input$year) & input$year != "All") {
+      data_subset <- subset(data_subset, Your.current.year.of.Study == input$year)
+    }
+    
+    # Filter data based on treatment
+    if (!is.null(input$treatment) & input$treatment != "All") {
+      data_subset <- subset(data_subset, Did.you.seek.any.specialist.for.a.treatment. == input$treatment)
+    }
+    
+    return(data_subset)
+  })
+  
+  # Display data table
+  output$table <- renderTable({
+    subset_data()
+  })
+  
+  # Display summary statistics
+  output$summary <- renderPrint({
+    summary(subset_data())
+  })
+}
+
+# Run the Shiny app
+shinyApp(ui = ui, server = server)
